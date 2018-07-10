@@ -18,11 +18,17 @@ class Astronaut(object):
       frame = Surface(image_path)
       self.frames.append(frame)
     width, height = pygame.display.get_surface().get_size()
-    self.x = 0.5
-    self.y = 0.75
     self.resize(width, height)
+    self.x = 0.5
+    # self.y = float(height - self.height) / height
+    self.y = 0
+    self.ground = float(height - self.height) / height
     self.frame = 0
     self.image = self.frames[self.frame].image
+    self.going_right = False
+    self.going_left = False
+    self.going_up = False
+    self.y_speed = 0
   def resize(self, width, height):
     width = int(.05 * width)
     height = int(.1 * height)
@@ -46,10 +52,19 @@ class Astronaut(object):
     self.x -= 0.01
     if self.x < 0:
       self.x = 1
+  def gravity(self):
+    if self.y < self.ground:
+      self.y_speed += 0.01
+  def lift(self):
+    self.y_speed = -0.03
+  def y_move(self):
+    self.y += self.y_speed
+    width, height = pygame.display.get_surface().get_size()
+    if self.y > self.ground:
+      self.y = self.ground
+
   def blit(self, screen, width, height):
     screen.blit(self.image, (self.x * width, self.y * height))
-
-
 
 def resize(width, height, screen, surfaces):
   screen = pygame.display.set_mode((width, height), pygame.RESIZABLE | pygame.DOUBLEBUF)
@@ -76,28 +91,40 @@ def main():
   time = 0
   walk_time = 0
   change_direction_time = 0
-  walk_left = True
+  walk_left = False
+  walk_right = False
   while not stop_game:
     for event in pygame.event.get():
       if event.type == pygame.KEYDOWN:
         if event.key == pygame.K_ESCAPE:
           width, height = (800, 600)
           screen, surfaces = resize(width, height, screen, surfaces)
+        if event.key == pygame.K_LEFT:
+          astronaut.going_left = True
+        if event.key == pygame.K_RIGHT:
+          astronaut.going_right = True
+        if event.key == pygame.K_UP:
+          astronaut.going_up = True
+      if event.type == pygame.KEYUP:
+        if event.key == pygame.K_LEFT:
+          astronaut.going_left = False
+        if event.key == pygame.K_RIGHT:
+          astronaut.going_right = False
+        if event.key == pygame.K_UP:
+          astronaut.going_up = False
       if event.type == pygame.VIDEORESIZE:
         width, height = event.dict['size']
         screen, surfaces = resize(width, height, screen, surfaces)
       if event.type == pygame.QUIT:
         stop_game = True
-    if pygame.time.get_ticks() > walk_time:
-      if walk_left:
-        astronaut.walk_left()
-      else:
-        astronaut.walk_right()
-      walk_time += 100
-    if pygame.time.get_ticks() > change_direction_time:
-      if random.random() > 0.5:
-        walk_left = not walk_left
-      change_direction_time += 1000
+    astronaut.y_move()
+    astronaut.gravity()
+    if astronaut.going_left:
+      astronaut.walk_left()
+    elif astronaut.going_right:
+      astronaut.walk_right()
+    if astronaut.going_up:
+      astronaut.lift()
     screen.fill((0, 0, 0))
     screen.blit(background.image, (0,0))
     astronaut.blit(screen, width, height)
