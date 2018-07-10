@@ -99,7 +99,7 @@ class Astronaut(object):
       self.frame = 0
     self.image = self.frames[self.frame].image
     self.frame += 1
-    self.x += 0.01
+    self.x += 0.005
     if self.x > 1:
       self.x = 0
   def walk_left(self):
@@ -107,14 +107,14 @@ class Astronaut(object):
       self.frame = 0
     self.image = pygame.transform.flip(self.frames[self.frame].image, True, False)
     self.frame += 1
-    self.x -= 0.01
+    self.x -= 0.005
     if self.x < 0:
       self.x = 1
   def gravity(self):
     if self.y < self.ground:
-      self.y_speed += 0.01
+      self.y_speed += 0.005
   def lift(self):
-    self.y_speed = -0.03
+    self.y_speed = -0.015
   def y_move(self):
     self.y += self.y_speed
     width, height = pygame.display.get_surface().get_size()
@@ -127,15 +127,18 @@ class Astronaut(object):
     self.y = self.ground
 
 class UFO(Surface):
-  def __init__(self, image_path):
+  def __init__(self, image_path, math_answer, target):
     super(UFO, self).__init__(image_path)
     width, height = pygame.display.get_surface().get_size()
     self.x = -0.1
     self.y = random.random() / 2
     self.resize(width, height)
     self.ground = float(height - self.height) / height
-    self.x_speed = 0.01
-    self.target = False
+    self.x_speed = 0.005
+    self.target = target
+    self.math_answer = math_answer
+    font = pygame.font.Font(None, 40)
+    self.answer_text = font.render(str(self.math_answer), True, (255, 255, 255))
   def move(self):
     self.x += self.x_speed
   def reset(self):
@@ -147,8 +150,7 @@ class UFO(Surface):
     self.image = pygame.transform.scale(self.image, (self.width, self.height))
   def blit(self, screen, target_text, width, height):
     screen.blit(self.image, (self.x * width, self.y * height))
-    if self.target:
-      screen.blit(target_text, ((self.x + 0.02) * width, (self.y - 0.05) * height))
+    screen.blit(self.answer_text, ((self.x + 0.03) * width, (self.y - 0.05) * height))
   def collide(self, astronaut):
     width, height = pygame.display.get_surface().get_size()
     if self.x + float(self.width) / width < astronaut.x:
@@ -182,9 +184,9 @@ def main():
   astronaut.resize(width, height)
   ufo_images = ['./images/red-ship.png', './images/blue-ship.png', './images/orange-ship.png']
   surfaces = [background, astronaut]
-  for i in range(10):
-    math = Math()
+  math = Math()
   font = pygame.font.Font(None, 25)
+  math_text = font.render(math.expression + ' = ?', True, (255, 255, 255))
   target_text = font.render('Target', True, (255, 255, 255))
   lives = 5
   lives_text = font.render('Lives: ' + str(lives), True, (255, 255, 255))
@@ -193,9 +195,11 @@ def main():
   stop_game = False
   time = 0
   add_ufo_time = 1500
-  num_ufos = 5
+  num_ufos = 4
   ufo_i = 0
   ufos = []
+  target_answer_position = random.randint(0, num_ufos - 1)
+  wrong_answer_i = 0
   walk_left = False
   walk_right = False
   reset = False
@@ -225,7 +229,11 @@ def main():
         stop_game = True
     if pygame.time.get_ticks() > add_ufo_time:
       if ufo_i < num_ufos:
-        ufos.append(UFO(ufo_images[ufo_i % 3]))
+        if ufo_i == target_answer_position:
+          ufos.append(UFO(ufo_images[ufo_i % 3], math.target_answer, True))
+        else:
+          ufos.append(UFO(ufo_images[ufo_i % 3], math.wrong_answers[wrong_answer_i], False))
+          wrong_answer_i += 1
         if ufo_i == 0:
           ufos[ufo_i].target = True
       else:
@@ -257,10 +265,11 @@ def main():
     astronaut.blit(screen, width, height)
     for ufo in ufos:
       ufo.blit(screen, target_text, width, height)
+    screen.blit(math_text, (0.5 * width - math_text.get_width() / 2, 0.1 * height))
     screen.blit(score_text, (0.01 * width, 0.01 * height))
     screen.blit(lives_text, (width - 0.1 * width, 0.01 * height))
     pygame.display.update()
-    clock.tick(30)
+    clock.tick(60)
     frame += 1
   pygame.quit()
 
