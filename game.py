@@ -68,6 +68,9 @@ class Astronaut(object):
       self.y = self.ground
   def blit(self, screen, width, height):
     screen.blit(self.image, (self.x * width, self.y * height))
+  def reset(self):
+    self.x = 0.5
+    self.y = self.ground
 
 class UFO(Surface):
   def __init__(self, image_path):
@@ -139,6 +142,7 @@ def main():
   ufos = []
   walk_left = False
   walk_right = False
+  reset = False
   while not stop_game:
     for event in pygame.event.get():
       if event.type == pygame.KEYDOWN:
@@ -187,9 +191,11 @@ def main():
         if ufo.target:
           score += 50
           score_text = font.render('Score: ' + str(score), True, (255, 255, 255))
+          astronaut.reset()
         else:
           lives -= 1
           lives_text = font.render('Lives: ' + str(lives), True, (255, 255, 255))
+          astronaut.reset()
     screen.fill((0, 0, 0))
     background.blit(screen)
     astronaut.blit(screen, width, height)
