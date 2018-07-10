@@ -15,6 +15,60 @@ class Surface(object):
   def blit(self, screen):
     screen.blit(self.image, (self.x, self.y))
 
+class Math(object):
+  def __init__(self, num_answers = 4):
+    self.num_answers = 4
+    self.wrong_answers = []
+    self.operation = random.choice(['addition', 'subtraction', 'multiplication', 'division'])
+    operation_functions = {'addition': self.addition, 'subtraction': self.subtraction, 'multiplication': self.multiplication, 'division': self.division}
+    operation_functions[self.operation]()
+    print self.expression, '=', self.target_answer
+    print self.wrong_answers
+  def addition(self):
+    self.operand = '+'
+    self.num_1 = random.randint(0, 100)
+    self.num_2 = random.randint(0, 100)
+    self.expression = '%d %s %d' % (self.num_1, self.operand, self.num_2)
+    self.target_answer = eval(self.expression)
+    for i in range(self.num_answers - 1):
+      random_answer = self.target_answer
+      while random_answer == self.target_answer:
+        random_answer = random.randint(0, 200)
+      self.wrong_answers.append(random_answer)
+  def subtraction(self):
+    self.operand = '-'
+    self.num_2 = random.randint(0, 100)
+    self.num_1 = random.randint(self.num_2, 100)
+    self.expression = '%d %s %d' % (self.num_1, self.operand, self.num_2)
+    self.target_answer = eval(self.expression)
+    for i in range(self.num_answers - 1):
+      random_answer = self.target_answer
+      while random_answer == self.target_answer:
+        random_answer = random.randint(self.num_2, self.num_1)
+      self.wrong_answers.append(random_answer)
+  def multiplication(self):
+    self.operand = '*'
+    self.num_1 = random.randint(0, 12)
+    self.num_2 = random.randint(0, 12)
+    self.expression = '%d %s %d' % (self.num_1, self.operand, self.num_2)
+    self.target_answer = eval(self.expression)
+    for i in range(self.num_answers - 1):
+      random_answer = self.target_answer
+      while random_answer == self.target_answer:
+        random_answer = random.randint(min(self.num_1, self.num_2), self.num_1 * self.num_2)
+      self.wrong_answers.append(random_answer)
+  def division(self):
+    self.operand = '/'
+    self.num_2 = random.randint(1, 12)
+    self.num_1 = self.num_2 * random.randint(1, 12)
+    self.expression = '%d %s %d' % (self.num_1, self.operand, self.num_2)
+    self.target_answer = eval(self.expression)
+    for i in range(self.num_answers - 1):
+      random_answer = self.target_answer
+      while random_answer == self.target_answer:
+        random_answer = random.randint(1, 12)
+      self.wrong_answers.append(random_answer)
+
 class Astronaut(object):
   def __init__(self, image_paths):
     self.frames = []
@@ -128,6 +182,8 @@ def main():
   astronaut.resize(width, height)
   ufo_images = ['./images/red-ship.png', './images/blue-ship.png', './images/orange-ship.png']
   surfaces = [background, astronaut]
+  for i in range(10):
+    math = Math()
   font = pygame.font.Font(None, 25)
   target_text = font.render('Target', True, (255, 255, 255))
   lives = 5
