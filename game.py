@@ -4,12 +4,16 @@ class Surface(object):
   def __init__(self, image_path):
     self.image = pygame.image.load(image_path).convert_alpha()
     self.set_dimensions()
+    self.x = 0
+    self.y = 0
   def resize(self, width, height):
     self.image = pygame.transform.scale(self.image, (width, height))
     self.set_dimensions()
   def set_dimensions(self):
     self.width = self.image.get_rect().width
     self.height = self.image.get_rect().height
+  def blit(self, screen):
+    screen.blit(self.image, (self.x, self.y))
 
 class Astronaut(object):
   def __init__(self, image_paths):
@@ -62,7 +66,27 @@ class Astronaut(object):
     width, height = pygame.display.get_surface().get_size()
     if self.y > self.ground:
       self.y = self.ground
+  def blit(self, screen, width, height):
+    screen.blit(self.image, (self.x * width, self.y * height))
 
+class UFO(Surface):
+  def __init__(self, image_path):
+    super(UFO, self).__init__(image_path)
+    width, height = pygame.display.get_surface().get_size()
+    self.x = -0.1
+    self.y = random.random() / 2
+    self.resize(width, height)
+    self.ground = float(height - self.height) / height
+    self.x_speed = 0.01
+  def move(self):
+    self.x += self.x_speed
+  def reset(self):
+    self.x = -0.1
+    self.y = self.y = random.random() / 2
+  def resize(self, width, height):
+    self.width = int(.1 * width)
+    self.height = int(.1 * height)
+    self.image = pygame.transform.scale(self.image, (self.width, self.height))
   def blit(self, screen, width, height):
     screen.blit(self.image, (self.x * width, self.y * height))
 
@@ -85,12 +109,15 @@ def main():
   background.resize(width, height)
   astronaut = Astronaut(['./images/astronaut-stand.png', './images/astronaut-walk1.png', './images/astronaut-walk2.png'])
   astronaut.resize(width, height)
-  surfaces = (background, astronaut)
+  ufo_images = ['./images/red-ship.png', './images/blue-ship.png', './images/orange-ship.png']
+  surfaces = [background, astronaut]
 
   stop_game = False
   time = 0
-  walk_time = 0
-  change_direction_time = 0
+  add_ufo_time = 1500
+  num_ufos = 5
+  ufo_i = 0
+  ufos = []
   walk_left = False
   walk_right = False
   while not stop_game:
@@ -117,6 +144,14 @@ def main():
         screen, surfaces = resize(width, height, screen, surfaces)
       if event.type == pygame.QUIT:
         stop_game = True
+    if pygame.time.get_ticks() > add_ufo_time:
+      if ufo_i < num_ufos:
+        ufos.append(UFO(ufo_images[ufo_i % 3]))
+      else:
+        ufos[ufo_i % num_ufos].reset()
+      ufo_i += 1
+      add_ufo_time += 1500
+    surfaces = [background, astronaut] + ufos
     astronaut.y_move()
     astronaut.gravity()
     if astronaut.going_left:
@@ -125,9 +160,13 @@ def main():
       astronaut.walk_right()
     if astronaut.going_up:
       astronaut.lift()
+    for ufo in ufos:
+      ufo.move()
     screen.fill((0, 0, 0))
-    screen.blit(background.image, (0,0))
+    background.blit(screen)
     astronaut.blit(screen, width, height)
+    for ufo in ufos:
+      ufo.blit(screen, width, height)
     pygame.display.update()
     clock.tick(30)
     frame += 1
