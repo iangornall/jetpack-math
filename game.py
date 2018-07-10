@@ -78,6 +78,7 @@ class UFO(Surface):
     self.resize(width, height)
     self.ground = float(height - self.height) / height
     self.x_speed = 0.01
+    self.target = False
   def move(self):
     self.x += self.x_speed
   def reset(self):
@@ -87,8 +88,21 @@ class UFO(Surface):
     self.width = int(.1 * width)
     self.height = int(.1 * height)
     self.image = pygame.transform.scale(self.image, (self.width, self.height))
-  def blit(self, screen, width, height):
+  def blit(self, screen, target_text, width, height):
     screen.blit(self.image, (self.x * width, self.y * height))
+    if self.target:
+      screen.blit(target_text, ((self.x + 0.02) * width, (self.y - 0.05) * height))
+  def collide(self, astronaut):
+    width, height = pygame.display.get_surface().get_size()
+    if self.x + float(self.width) / width < astronaut.x:
+      return False
+    if astronaut.x + float(astronaut.width) / width < self.x:
+      return False
+    if self.y + float(self.height) / height < astronaut.y:
+      return False
+    if astronaut.y + float(astronaut.height) / height < self.y:
+      return False
+    return True
 
 def resize(width, height, screen, surfaces):
   screen = pygame.display.set_mode((width, height), pygame.RESIZABLE | pygame.DOUBLEBUF)
@@ -111,7 +125,12 @@ def main():
   astronaut.resize(width, height)
   ufo_images = ['./images/red-ship.png', './images/blue-ship.png', './images/orange-ship.png']
   surfaces = [background, astronaut]
-
+  font = pygame.font.Font(None, 25)
+  target_text = font.render('Target', True, (255, 255, 255))
+  lives = 5
+  lives_text = font.render('Lives: ' + str(lives), True, (255, 255, 255))
+  score = 0
+  score_text = font.render('Score: ' + str(score), True, (255, 255, 255))
   stop_game = False
   time = 0
   add_ufo_time = 1500
@@ -147,6 +166,8 @@ def main():
     if pygame.time.get_ticks() > add_ufo_time:
       if ufo_i < num_ufos:
         ufos.append(UFO(ufo_images[ufo_i % 3]))
+        if ufo_i == 0:
+          ufos[ufo_i].target = True
       else:
         ufos[ufo_i % num_ufos].reset()
       ufo_i += 1
@@ -162,11 +183,20 @@ def main():
       astronaut.lift()
     for ufo in ufos:
       ufo.move()
+      if ufo.collide(astronaut):
+        if ufo.target:
+          score += 50
+          score_text = font.render('Score: ' + str(score), True, (255, 255, 255))
+        else:
+          lives -= 1
+          lives_text = font.render('Lives: ' + str(lives), True, (255, 255, 255))
     screen.fill((0, 0, 0))
     background.blit(screen)
     astronaut.blit(screen, width, height)
     for ufo in ufos:
-      ufo.blit(screen, width, height)
+      ufo.blit(screen, target_text, width, height)
+    screen.blit(score_text, (0.01 * width, 0.01 * height))
+    screen.blit(lives_text, (width - 0.1 * width, 0.01 * height))
     pygame.display.update()
     clock.tick(30)
     frame += 1
