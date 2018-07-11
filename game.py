@@ -174,6 +174,11 @@ def main():
   clock = pygame.time.Clock()
   frame = 0
   pygame.display.set_caption('Math Blaster')
+  pygame.mixer.init()
+  right_sound = pygame.mixer.Sound('./sounds/right.wav')
+  wrong_sound = pygame.mixer.Sound('./sounds/wrong.wav')
+  pygame.mixer.music.load('./sounds/asteroid-fun.mp3')
+  pygame.mixer.music.play(loops = -1)
   # set background and screen size
   screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN | pygame.DOUBLEBUF | pygame.HWSURFACE)
   width, height = pygame.display.get_surface().get_size()
@@ -199,7 +204,6 @@ def main():
   num_ufos = 4
   ufo_i = 0
   ufos = []
-  target_answer_position = random.randint(0, num_ufos - 1)
   wrong_answer_i = 0
   right_answer = False
   wrong_answer = False
@@ -227,6 +231,7 @@ def main():
         screen, surfaces = resize(width, height, screen, surfaces)
       if event.type == pygame.QUIT:
         stop_game = True
+    target_answer_position = random.randint(0, num_ufos - 1)
     if pygame.time.get_ticks() > add_ufo_time:
       if ufo_i < num_ufos:
         if ufo_i == target_answer_position:
@@ -277,10 +282,12 @@ def main():
     screen.blit(lives_text, (width - 0.1 * width, 0.01 * height))
     if right_answer:
       screen.blit(right_text, (0.5 * width - right_text.get_width() / 2, 0.5 * height))
+      right_sound.play()
       if pygame.time.get_ticks() > right_answer_time:
         right_answer = False
     elif wrong_answer:
       screen.blit(wrong_text, (0.5 * width - wrong_text.get_width() / 2, 0.5 * height))
+      wrong_sound.play()
       if pygame.time.get_ticks() > wrong_answer_time:
         wrong_answer = False
     pygame.display.update()
