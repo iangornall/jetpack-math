@@ -1,4 +1,4 @@
-import pygame, random
+import pygame, random, time
 
 class Surface(object):
   def __init__(self, image_path):
@@ -22,8 +22,6 @@ class Math(object):
     self.operation = random.choice(['addition', 'subtraction', 'multiplication', 'division'])
     operation_functions = {'addition': self.addition, 'subtraction': self.subtraction, 'multiplication': self.multiplication, 'division': self.division}
     operation_functions[self.operation]()
-    print self.expression, '=', self.target_answer
-    print self.wrong_answers
   def addition(self):
     self.operand = '+'
     self.num_1 = random.randint(0, 100)
@@ -62,7 +60,7 @@ class Math(object):
     self.num_2 = random.randint(1, 12)
     self.num_1 = self.num_2 * random.randint(1, 12)
     self.expression = '%d %s %d' % (self.num_1, self.operand, self.num_2)
-    self.target_answer = eval(self.expression)
+    self.target_answer = int(eval(self.expression))
     for i in range(self.num_answers - 1):
       random_answer = self.target_answer
       while random_answer == self.target_answer:
@@ -170,6 +168,7 @@ def resize(width, height, screen, surfaces):
     surface.resize(width, height)
   return screen, surfaces
 
+
 def main():
   pygame.init()
   clock = pygame.time.Clock()
@@ -186,23 +185,24 @@ def main():
   surfaces = [background, astronaut]
   math = Math()
   font = pygame.font.Font(None, 25)
-  math_text = font.render(math.expression + ' = ?', True, (255, 255, 255))
-  target_text = font.render('Target', True, (255, 255, 255))
+  white = (255, 255, 255)
+  math_text = font.render(math.expression + ' = ?', True, white)
+  target_text = font.render('Target', True, white)
   lives = 5
-  lives_text = font.render('Lives: ' + str(lives), True, (255, 255, 255))
+  lives_text = font.render('Lives: ' + str(lives), True, white)
   score = 0
-  score_text = font.render('Score: ' + str(score), True, (255, 255, 255))
+  score_text = font.render('Score: ' + str(score), True, white)
+  wrong_text = font.render('Wrong answer!  You lose a life!', True, white)
+  right_text = font.render('Correct!  50 points!', True, white)
   stop_game = False
-  time = 0
   add_ufo_time = 1500
   num_ufos = 4
   ufo_i = 0
   ufos = []
   target_answer_position = random.randint(0, num_ufos - 1)
   wrong_answer_i = 0
-  walk_left = False
-  walk_right = False
-  reset = False
+  right_answer = False
+  wrong_answer = False
   while not stop_game:
     for event in pygame.event.get():
       if event.type == pygame.KEYDOWN:
@@ -234,8 +234,6 @@ def main():
         else:
           ufos.append(UFO(ufo_images[ufo_i % 3], math.wrong_answers[wrong_answer_i], False))
           wrong_answer_i += 1
-        if ufo_i == 0:
-          ufos[ufo_i].target = True
       else:
         ufos[ufo_i % num_ufos].reset()
       ufo_i += 1
@@ -256,10 +254,19 @@ def main():
           score += 50
           score_text = font.render('Score: ' + str(score), True, (255, 255, 255))
           astronaut.reset()
+          math = Math()
+          ufos = []
+          math_text = font.render(math.expression + ' = ?', True, (255, 255, 255))
+          ufo_i = 0
+          wrong_answer_i = 0
+          right_answer = True
+          right_answer_time = pygame.time.get_ticks() + 1000
         else:
           lives -= 1
           lives_text = font.render('Lives: ' + str(lives), True, (255, 255, 255))
           astronaut.reset()
+          wrong_answer = True
+          wrong_answer_time = pygame.time.get_ticks() + 1000
     screen.fill((0, 0, 0))
     background.blit(screen)
     astronaut.blit(screen, width, height)
@@ -268,6 +275,14 @@ def main():
     screen.blit(math_text, (0.5 * width - math_text.get_width() / 2, 0.1 * height))
     screen.blit(score_text, (0.01 * width, 0.01 * height))
     screen.blit(lives_text, (width - 0.1 * width, 0.01 * height))
+    if right_answer:
+      screen.blit(right_text, (0.5 * width - right_text.get_width() / 2, 0.5 * height))
+      if pygame.time.get_ticks() > right_answer_time:
+        right_answer = False
+    elif wrong_answer:
+      screen.blit(wrong_text, (0.5 * width - wrong_text.get_width() / 2, 0.5 * height))
+      if pygame.time.get_ticks() > wrong_answer_time:
+        wrong_answer = False
     pygame.display.update()
     clock.tick(60)
     frame += 1
