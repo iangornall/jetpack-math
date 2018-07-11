@@ -77,9 +77,8 @@ class Astronaut(object):
     self.lift_surface = Surface(lift_path)
     self.resize(width, height)
     self.x = 0.5
-    # self.y = float(height - self.height) / height
-    self.y = 0
     self.ground = float(height - self.height) / height
+    self.y = self.ground
     self.frame = 0
     self.image = self.frames[self.frame].image
     self.going_right = False
@@ -254,6 +253,7 @@ def main():
             score = 0
             lives = 5
             score_text = font.render('Score: ' + str(score), True, (255, 255, 255))
+            lives_text = font.render('Lives: ' + str(lives), True, white)
             astronaut.reset()
             math = Math()
             ufos = []
