@@ -68,12 +68,13 @@ class Math(object):
       self.wrong_answers.append(random_answer)
 
 class Astronaut(object):
-  def __init__(self, image_paths):
+  def __init__(self, image_paths, lift_path):
     self.frames = []
     for image_path in image_paths:
       frame = Surface(image_path)
       self.frames.append(frame)
     width, height = pygame.display.get_surface().get_size()
+    self.lift_surface = Surface(lift_path)
     self.resize(width, height)
     self.x = 0.5
     # self.y = float(height - self.height) / height
@@ -92,7 +93,14 @@ class Astronaut(object):
       frame.resize(width, height)
     self.width = self.frames[0].width
     self.height = self.frames[0].height
+    width = int(1.1 * width)
+    height = int(1.4 * height)
+    self.lift_surface.resize(width, height)
+    self.lift_image_right = self.lift_surface.image
+    self.lift_image_left = pygame.transform.flip(self.lift_image_right, True, False)
+    self.lift_image = self.lift_image_right
   def walk_right(self):
+    self.lift_image = self.lift_image_right
     if self.frame >= len(self.frames):
       self.frame = 0
     self.image = self.frames[self.frame].image
@@ -101,6 +109,7 @@ class Astronaut(object):
     if self.x > 1:
       self.x = 0
   def walk_left(self):
+    self.lift_image = self.lift_image_left
     if self.frame >= len(self.frames):
       self.frame = 0
     self.image = pygame.transform.flip(self.frames[self.frame].image, True, False)
@@ -112,6 +121,7 @@ class Astronaut(object):
     if self.y < self.ground:
       self.y_speed += 0.005
   def lift(self):
+    self.image = self.lift_image
     self.y_speed = -0.015
   def y_move(self):
     self.y += self.y_speed
@@ -123,6 +133,12 @@ class Astronaut(object):
   def reset(self):
     self.x = 0.5
     self.y = self.ground
+  def hide(self):
+    self.x = -1000000
+    self.y = -1000000
+    self.going_left = False
+    self.going_right = False
+    self.going_up = False
 
 class UFO(Surface):
   def __init__(self, image_path, math_answer, target):
@@ -160,6 +176,9 @@ class UFO(Surface):
     if astronaut.y + float(astronaut.height) / height < self.y:
       return False
     return True
+  def hide(self):
+    self.x = -1000000
+    self.y = -1000000
 
 def resize(width, height, screen, surfaces):
   screen = pygame.display.set_mode((width, height), pygame.RESIZABLE | pygame.DOUBLEBUF)
@@ -184,7 +203,7 @@ def main():
   width, height = pygame.display.get_surface().get_size()
   background = Surface('./images/bg5.jpg')
   background.resize(width, height)
-  astronaut = Astronaut(['./images/astronaut-stand.png', './images/astronaut-walk1.png', './images/astronaut-walk2.png'])
+  astronaut = Astronaut(['./images/astronaut-stand.png', './images/astronaut-walk1.png', './images/astronaut-walk2.png'], './images/astronaut-lift.png')
   astronaut.resize(width, height)
   ufo_images = ['./images/red-ship.png', './images/blue-ship.png', './images/orange-ship.png']
   surfaces = [background, astronaut]
@@ -193,12 +212,13 @@ def main():
   white = (255, 255, 255)
   math_text = font.render(math.expression + ' = ?', True, white)
   target_text = font.render('Target', True, white)
-  lives = 5
+  lives = 0
   lives_text = font.render('Lives: ' + str(lives), True, white)
   score = 0
   score_text = font.render('Score: ' + str(score), True, white)
   wrong_text = font.render('Wrong answer!  You lose a life!', True, white)
   right_text = font.render('Correct!  50 points!', True, white)
+  game_over_text = font.render('Game Over.  Hit Enter to play again!', True, white)
   stop_game = False
   add_ufo_time = 1500
   num_ufos = 4
@@ -207,36 +227,56 @@ def main():
   wrong_answer_i = 0
   right_answer = False
   wrong_answer = False
+  target_answer_position = random.randint(0, num_ufos - 1)
+  game_over = False
   while not stop_game:
     for event in pygame.event.get():
+      if not game_over:
+        if event.type == pygame.KEYDOWN:
+          if event.key == pygame.K_LEFT:
+            astronaut.going_left = True
+          if event.key == pygame.K_RIGHT:
+            astronaut.going_right = True
+          if event.key == pygame.K_UP:
+            astronaut.going_up = True
+        if event.type == pygame.KEYUP:
+          if event.key == pygame.K_LEFT:
+            astronaut.going_left = False
+          if event.key == pygame.K_RIGHT:
+            astronaut.going_right = False
+          if event.key == pygame.K_UP:
+            astronaut.going_up = False
+      if game_over:
+        if event.type == pygame.KEYDOWN:
+          if event.key == pygame.K_RETURN:
+            score = 0
+            lives = 5
+            score_text = font.render('Score: ' + str(score), True, (255, 255, 255))
+            astronaut.reset()
+            math = Math()
+            ufos = []
+            math_text = font.render(math.expression + ' = ?', True, (255, 255, 255))
+            ufo_i = 0
+            wrong_answer_i = 0
+            game_over = False
+            target_answer_position = random.randint(0, num_ufos - 1)
       if event.type == pygame.KEYDOWN:
         if event.key == pygame.K_ESCAPE:
           width, height = (800, 600)
           screen, surfaces = resize(width, height, screen, surfaces)
-        if event.key == pygame.K_LEFT:
-          astronaut.going_left = True
-        if event.key == pygame.K_RIGHT:
-          astronaut.going_right = True
-        if event.key == pygame.K_UP:
-          astronaut.going_up = True
-      if event.type == pygame.KEYUP:
-        if event.key == pygame.K_LEFT:
-          astronaut.going_left = False
-        if event.key == pygame.K_RIGHT:
-          astronaut.going_right = False
-        if event.key == pygame.K_UP:
-          astronaut.going_up = False
       if event.type == pygame.VIDEORESIZE:
         width, height = event.dict['size']
         screen, surfaces = resize(width, height, screen, surfaces)
       if event.type == pygame.QUIT:
         stop_game = True
-    target_answer_position = random.randint(0, num_ufos - 1)
     if pygame.time.get_ticks() > add_ufo_time:
       if ufo_i < num_ufos:
+        print 'ufo', ufo_i
+        print 'target', target_answer_position
         if ufo_i == target_answer_position:
           ufos.append(UFO(ufo_images[ufo_i % 3], math.target_answer, True))
         else:
+          print 'wrong', wrong_answer_i
           ufos.append(UFO(ufo_images[ufo_i % 3], math.wrong_answers[wrong_answer_i], False))
           wrong_answer_i += 1
       else:
@@ -274,22 +314,31 @@ def main():
           wrong_answer_time = pygame.time.get_ticks() + 1000
     screen.fill((0, 0, 0))
     background.blit(screen)
-    astronaut.blit(screen, width, height)
-    for ufo in ufos:
-      ufo.blit(screen, target_text, width, height)
-    screen.blit(math_text, (0.5 * width - math_text.get_width() / 2, 0.1 * height))
-    screen.blit(score_text, (0.01 * width, 0.01 * height))
-    screen.blit(lives_text, (width - 0.1 * width, 0.01 * height))
-    if right_answer:
-      screen.blit(right_text, (0.5 * width - right_text.get_width() / 2, 0.5 * height))
-      right_sound.play()
-      if pygame.time.get_ticks() > right_answer_time:
-        right_answer = False
-    elif wrong_answer:
-      screen.blit(wrong_text, (0.5 * width - wrong_text.get_width() / 2, 0.5 * height))
-      wrong_sound.play()
-      if pygame.time.get_ticks() > wrong_answer_time:
-        wrong_answer = False
+    if lives < 1:
+      game_over = True
+      screen.blit(game_over_text, (0.5 * width - game_over_text.get_width() / 2, 0.3 * height))
+      for ufo in ufos:
+        ufo.hide()
+      astronaut.hide()
+    if not game_over:
+      astronaut.blit(screen, width, height)
+      for ufo in ufos:
+        ufo.blit(screen, target_text, width, height)
+      screen.blit(math_text, (0.5 * width - math_text.get_width() / 2, 0.1 * height))
+      screen.blit(score_text, (0.01 * width, 0.01 * height))
+      screen.blit(lives_text, (width - 0.1 * width, 0.01 * height))
+      if right_answer:
+        screen.blit(right_text, (0.5 * width - right_text.get_width() / 2, 0.5 * height))
+        right_sound.play()
+        if pygame.time.get_ticks() > right_answer_time:
+          right_answer = False
+          target_answer_position = random.randint(0, num_ufos - 1)
+      elif wrong_answer:
+        screen.blit(wrong_text, (0.5 * width - wrong_text.get_width() / 2, 0.5 * height))
+        wrong_sound.play()
+        if pygame.time.get_ticks() > wrong_answer_time:
+          wrong_answer = False
+    
     pygame.display.update()
     clock.tick(60)
     frame += 1
