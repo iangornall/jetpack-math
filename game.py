@@ -145,14 +145,14 @@ class UFO(Surface):
     super(UFO, self).__init__(image_path)
     width, height = pygame.display.get_surface().get_size()
     self.x = -0.1
-    self.y = random.random() / 2
-    self.resize(width, height)
+    self.y = random.random() / 2 + 0.1
     self.ground = float(height - self.height) / height
     self.x_speed = 0.005
     self.target = target
     self.math_answer = math_answer
-    font = pygame.font.Font(None, 40)
+    font = pygame.font.Font(None, height / 20)
     self.answer_text = font.render(str(self.math_answer), True, (255, 255, 255))
+    self.resize(width, height)
   def move(self):
     self.x += self.x_speed
   def reset(self):
@@ -162,9 +162,11 @@ class UFO(Surface):
     self.width = int(.1 * width)
     self.height = int(.1 * height)
     self.image = pygame.transform.scale(self.image, (self.width, self.height))
+    font = pygame.font.Font(None, height / 20)
+    self.answer_text = font.render(str(self.math_answer), True, (255, 255, 255))
   def blit(self, screen, target_text, width, height):
     screen.blit(self.image, (self.x * width, self.y * height))
-    screen.blit(self.answer_text, ((self.x + 0.03) * width, (self.y - 0.05) * height))
+    screen.blit(self.answer_text, (self.x * width + self.width / 2 - self.answer_text.get_width() / 2, (self.y - 0.03) * height))
   def collide(self, astronaut):
     width, height = pygame.display.get_surface().get_size()
     if self.x + float(self.width) / width < astronaut.x:
@@ -199,7 +201,7 @@ def main():
   pygame.mixer.music.load('./sounds/asteroid-fun.mp3')
   pygame.mixer.music.play(loops = -1)
   # set background and screen size
-  screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN | pygame.DOUBLEBUF | pygame.HWSURFACE)
+  screen = pygame.display.set_mode((800, 600), pygame.FULLSCREEN | pygame.DOUBLEBUF | pygame.HWSURFACE)
   width, height = pygame.display.get_surface().get_size()
   background = Surface('./images/bg5.jpg')
   background.resize(width, height)
@@ -212,7 +214,7 @@ def main():
   white = (255, 255, 255)
   math_text = font.render(math.expression + ' = ?', True, white)
   target_text = font.render('Target', True, white)
-  lives = 0
+  lives = 5
   lives_text = font.render('Lives: ' + str(lives), True, white)
   score = 0
   score_text = font.render('Score: ' + str(score), True, white)
@@ -271,12 +273,9 @@ def main():
         stop_game = True
     if pygame.time.get_ticks() > add_ufo_time:
       if ufo_i < num_ufos:
-        print 'ufo', ufo_i
-        print 'target', target_answer_position
         if ufo_i == target_answer_position:
           ufos.append(UFO(ufo_images[ufo_i % 3], math.target_answer, True))
         else:
-          print 'wrong', wrong_answer_i
           ufos.append(UFO(ufo_images[ufo_i % 3], math.wrong_answers[wrong_answer_i], False))
           wrong_answer_i += 1
       else:
