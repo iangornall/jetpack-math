@@ -53,7 +53,7 @@ class Math(object):
     for i in range(self.num_answers - 1):
       random_answer = self.target_answer
       while random_answer == self.target_answer:
-        random_answer = random.randint(min(self.num_1, self.num_2), self.num_1 * self.num_2)
+        random_answer = random.randint(min(self.num_1, self.num_2), self.num_1 * self.num_2 + 10)
       self.wrong_answers.append(random_answer)
   def division(self):
     self.operand = '/'
@@ -118,7 +118,7 @@ class Astronaut(object):
       self.x = 1
   def gravity(self):
     if self.y < self.ground:
-      self.y_speed += 0.005
+      self.y_speed += 0.001
   def lift(self):
     self.image = self.lift_image
     self.y_speed = -0.015
@@ -230,6 +230,7 @@ def main():
   wrong_answer = False
   target_answer_position = random.randint(0, num_ufos - 1)
   game_over = False
+  play_sound = True
   while not stop_game:
     for event in pygame.event.get():
       if not game_over:
@@ -328,15 +329,24 @@ def main():
       screen.blit(lives_text, (width - 0.1 * width, 0.01 * height))
       if right_answer:
         screen.blit(right_text, (0.5 * width - right_text.get_width() / 2, 0.5 * height))
-        right_sound.play()
+        if play_sound:
+          right_sound.play()
+        play_sound = False
         if pygame.time.get_ticks() > right_answer_time:
           right_answer = False
           target_answer_position = random.randint(0, num_ufos - 1)
+          ufos = []
+          ufo_i = 0
+          wrong_answer_i = 0
+          play_sound = True
       elif wrong_answer:
         screen.blit(wrong_text, (0.5 * width - wrong_text.get_width() / 2, 0.5 * height))
-        wrong_sound.play()
+        if play_sound:
+          wrong_sound.play()
+        play_sound = False
         if pygame.time.get_ticks() > wrong_answer_time:
           wrong_answer = False
+          play_sound = True
     
     pygame.display.update()
     clock.tick(60)
