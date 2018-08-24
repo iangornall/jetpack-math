@@ -2,7 +2,7 @@
 A game with an astronaut, spaceships, and numbers.
 
 ## Video of Gameplay
-<iframe width="560" height="315" src="https://www.youtube.com/embed/b66tvX5JW5Q" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+[![Gameplay](https://img.youtube.com/vi/b66tvX5JW5Q0.jpg)](http://www.youtube.com/watch?v=b66tvX5JW5Q)
 
 ## Contents
 --- 
