@@ -5,7 +5,6 @@ A game with an astronaut, spaceships, and numbers.
 ![Gameplay](./readme/math-blaster.gif)
 
 ## Contents
---- 
   * Game Description
   * Technology Used
   * Challenges and Solutions
@@ -14,7 +13,6 @@ A game with an astronaut, spaceships, and numbers.
   * Credits
 
 ## Game Description
----
 ### Controls
 Use arrow keys to move the hero.
 
@@ -24,12 +22,10 @@ Catch the wrong UFO, you lose a life.
 Score points to win the game.
 
 ## Technology Used
----
   * Python 2
   * Pygame
 
 ## Challenges and Solutions
----
 This was my first project using pygame, so familiarizing myself with the library was a primary challenge.
 
   * Challenge #1: Resizable display
@@ -49,17 +45,14 @@ This was my first project using pygame, so familiarizing myself with the library
   The basic physics of the main character were actually not a huge challenge.  I simply set the velocity to a value when up, left, or right were pressed in the corresponding direction.  Gravity just changed velocity at a set rate in the down direction.
 
 ## Future Goals
----
   * Display jet pack and running more accurately.  The animation for the jet pack needs to be triggered when it is used only, and the character should not run in mid-air.
 
   * Convert to a javascript library.  For more users to play, I want to move the game to be web accessible using something like Phaser.
 
 ## Author
----
   Ian Gornall
 
 ## Credits
----
 OpenGameArt.org
 UI - Buch
 Astronaut - MrGecko
