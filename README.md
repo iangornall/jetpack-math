@@ -2,7 +2,7 @@
 A game with an astronaut, spaceships, and numbers.
 
 ## Video of Gameplay
-[![Gameplay](https://img.youtube.com/vi/b66tvX5JW5Q/0.jpg)](http://www.youtube.com/watch?v=b66tvX5JW5Q)
+![Gameplay](./readme/math-blaster.gif)
 
 ## Contents
 --- 
